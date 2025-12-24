@@ -29,6 +29,31 @@ BIT_IDX_TO_BUTTON_MAP = {
 }
 
 
+def get_next_moves_from_ints(next_move_ints):
+    '''
+    Input:
+    next_move_ints (list[int]) - a list of integers representing next moves
+
+    Output:
+    next_move_strs (list[str]) - a list of string representations of next moves
+    '''
+
+    # convert each next move integer into its string representation by
+    # checking its bits
+    next_move_strs = []
+    for next_move in next_move_ints:
+        next_move_buttons = []
+        next_move_bin_str = format(next_move, '08b')
+        for i in range(len(next_move_bin_str)):
+            if next_move_bin_str[i] == '1':
+                next_move_buttons.append(BIT_IDX_TO_BUTTON_MAP[i])
+        next_move_str = ' + '.join(next_move_buttons)
+        if len(next_move_str) == 0:
+            next_move_str = '[no buttons pressed]'
+        next_move_strs.append(next_move_str)
+    return next_move_strs
+
+
 class ViTario:
     '''
     A system that uses a custom vision transformer (ViT) language model to
@@ -121,7 +146,8 @@ class ViTario:
         def _evaluate_model():
             num_correct_test = 0
             for _, (frames, actions) in tqdm(
-                    enumerate(test_dataloader), desc='Evaluation'):
+                    enumerate(test_dataloader), desc='Evaluation',
+                    total=len(test_dataloader)):
                 # move frames (shape is (batch size, channels, height, width)
                 # and actions (shape is (batch size)) to device
                 frames = frames.to(self.device)
@@ -136,18 +162,19 @@ class ViTario:
                 num_correct_test += (actions == preds).type(
                     torch.int32).sum().item()
             # print test accuracy
-            test_accuracy = num_correct_test / len(num_test_examples)
+            test_accuracy = num_correct_test / num_test_examples
             self.logger.info(f'Test accuracy: {test_accuracy}')
 
         # pretrain model
         self.logger.info('Training model...')
         for epoch in range(epochs):
-            self.logger.info(f'Epoch {epoch} of {epochs}')
+            self.logger.info(f'Epoch {epoch + 1} of {epochs}')
 
             # training
             num_correct_train = 0
             for _, (frames, actions) in tqdm(
-                    enumerate(train_dataloader), desc='Training'):
+                    enumerate(train_dataloader), desc='Training',
+                    total=len(train_dataloader)):
                 # move frames (shape is (batch size, channels, height, width)
                 # and actions (shape is (batch size)) to device
                 frames = frames.to(self.device)
@@ -172,7 +199,7 @@ class ViTario:
                 num_correct_train += (actions == preds).type(
                     torch.int32).sum().item()
             # print train accuracy
-            train_accuracy = num_correct_train / len(num_train_examples)
+            train_accuracy = num_correct_train / num_train_examples
             self.logger.info(f'Train accuracy: {train_accuracy}')
 
             # evaluate on test set
@@ -199,7 +226,7 @@ class ViTario:
             transformed_imgs.append(self.img_transforms(frame))
 
         # stack to form a batch
-        batch = torch.stack(transformed_imgs, dim=0)
+        batch = torch.stack(transformed_imgs, dim=0).to(self.device)
         
         # pass through model, get classification token logits
         logits = self.model(batch)[:, 0]
@@ -213,17 +240,10 @@ class ViTario:
         next_move_probs = preds.values.tolist()
 
         # format results into a string
-        next_move_strs = []
-        for next_move in next_moves:
-            next_move_buttons = []
-            next_move_bin_str = format(next_move, '08b')
-            for i in range(len(next_move_bin_str)):
-                if next_move_bin_str[i] == '1':
-                    next_move_buttons.append(BIT_IDX_TO_BUTTON_MAP[i])
-            next_move_strs.append(' + '.join(next_move_buttons))
+        next_move_strs = get_next_moves_from_ints(next_moves)
 
         # return next move strings and probabilities
-        return zip(next_move_strs, next_move_probs)
+        return list(zip(next_move_strs, next_move_probs))
 
     def save(self, save_dir=DEFAULT_SAVE_DIR):
         # create save directory if it doesn't already exist

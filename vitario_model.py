@@ -367,7 +367,6 @@ class ViTarioModel(nn.Module):
             self.img_size[1] // self.patch_size[1]) + 1
         self.num_moves = num_moves
         self.embed_dim = embed_dim
-        self.context_size = 1 + self.num_moves
         self.num_attn_heads = num_attn_heads
         self.attn_head_size = attn_head_size
         self.hidden_size = hidden_size
@@ -455,7 +454,8 @@ class ViTarioModel(nn.Module):
         # shape is (batch size, context size, embed dim)
         img_patch_embeds = self.img_patch_embed(flattened_img_patches)
         cls_token_embed = self.cls_token_embed(
-            torch.zeros((flattened_img_patches.shape[0], 1)))
+            torch.zeros((flattened_img_patches.shape[0], 1))
+                .type(torch.int32).to(self.device))
         input_tok_embeds = torch.cat([cls_token_embed, img_patch_embeds], dim=1)
 
         # enrich token embeddings with positional info
