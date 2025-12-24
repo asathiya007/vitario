@@ -1,6 +1,6 @@
 # ViTario
 
-ViTario is an AI system that uses a custom vision transformer (ViT) model to predict the best move to make at a given frame of the Super Mario Bros. game on the Nintendo Entertainment System (NES).
+ViTario is an AI system that uses a custom vision transformer (ViT) model to predict the next move to make at a given frame in the Super Mario Bros. game on the Nintendo Entertainment System (NES).
 
 See the `vitario.ipynb` notebook for a demo.
 

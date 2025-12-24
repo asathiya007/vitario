@@ -57,7 +57,7 @@ def get_next_moves_from_ints(next_move_ints):
 class ViTario:
     '''
     A system that uses a custom vision transformer (ViT) language model to
-    predict the best move to make at a given frame of the Super Mario Bros.
+    predict the next move to make at a given frame in the Super Mario Bros.
     game on the Nintendo Entertainment System (NES)
     '''
     def __init__(self):
