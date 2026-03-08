@@ -121,7 +121,7 @@ class SelfAttnHead(nn.Module):
         # get head-specific query, key, and value projections
         # input: mha_q, mha_k, mha_v (initial query, key, and value vectors,
         # given to all attention heads)
-        # input shape: (batch size, context size, embed dim)
+        # input shape: (batch size, context size, attn head size)
         # outputs: q, k, v
         # output shapes: (batch size, context size, attn head size),
         # (batch size, context size, attn head size),
