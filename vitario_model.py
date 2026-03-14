@@ -187,7 +187,8 @@ class MultiHeadAttn(nn.Module):
 
         # output projection layer
         self.o_proj = nn.Linear(
-            self.attn_head_size * self.num_attn_heads, self.embed_dim)
+            self.attn_head_size * self.num_attn_heads, self.embed_dim,
+            bias=False)
 
     def _get_concat_sah_outputs(self, x):
         '''
@@ -424,8 +425,8 @@ class ViTarioModel(nn.Module):
                 self.embed_dim, self.context_size, self.num_attn_heads,
                 self.attn_head_size, self.hidden_size, self.num_hidden_layers))
 
-        # output projection layer
-        self.o_proj = nn.Linear(self.embed_dim, self.num_moves, bias=False)
+        # linear layer to get logits
+        self.logits_layer = nn.Linear(self.embed_dim, self.num_moves)
 
     def _get_sin_pos_embeds(self):
         '''
@@ -497,9 +498,9 @@ class ViTarioModel(nn.Module):
         for attn_block in self.attn_blocks:
             enriched_tok_embeds = attn_block(enriched_tok_embeds)
 
-        # project token embeddings from embed_dim dimensions to num_moves
-        # dimensions to get logits
-        logits = self.o_proj(enriched_tok_embeds)
+        # convert token embeddings (embed_dim dimensions) to logits
+        # (num_moves dimensions)
+        logits = self.logits_layer(enriched_tok_embeds)
 
         # return logits
         return logits
