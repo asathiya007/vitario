@@ -60,9 +60,12 @@ class SelfAttnHead(nn.Module):
         self.context_size = context_size
 
         # query, key, and value projection layers
-        self.q_proj = nn.Linear(self.attn_head_size, self.attn_head_size)
-        self.k_proj = nn.Linear(self.attn_head_size, self.attn_head_size)
-        self.v_proj = nn.Linear(self.attn_head_size, self.attn_head_size)
+        self.q_proj = nn.Linear(self.attn_head_size, self.attn_head_size,
+                                bias=False)
+        self.k_proj = nn.Linear(self.attn_head_size, self.attn_head_size,
+                                bias=False)
+        self.v_proj = nn.Linear(self.attn_head_size, self.attn_head_size,
+                                bias=False)
 
     def _get_init_attn_pattern(self, q, k):
         '''
@@ -169,9 +172,12 @@ class MultiHeadAttn(nn.Module):
         self.attn_head_size = attn_head_size
 
         # query, key, and value projection layers
-        self.mha_q_proj = nn.Linear(self.embed_dim, self.attn_head_size)
-        self.mha_k_proj = nn.Linear(self.embed_dim, self.attn_head_size)
-        self.mha_v_proj = nn.Linear(self.embed_dim, self.attn_head_size)
+        self.mha_q_proj = nn.Linear(self.embed_dim, self.attn_head_size,
+                                    bias=False)
+        self.mha_k_proj = nn.Linear(self.embed_dim, self.attn_head_size,
+                                    bias=False)
+        self.mha_v_proj = nn.Linear(self.embed_dim, self.attn_head_size,
+                                    bias=False)
     
         # create attention heads
         self.attn_heads = nn.ModuleList([])
@@ -419,7 +425,7 @@ class ViTarioModel(nn.Module):
                 self.attn_head_size, self.hidden_size, self.num_hidden_layers))
 
         # output projection layer
-        self.o_proj = nn.Linear(self.embed_dim, self.num_moves)
+        self.o_proj = nn.Linear(self.embed_dim, self.num_moves, bias=False)
 
     def _get_sin_pos_embeds(self):
         '''
