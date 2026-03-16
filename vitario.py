@@ -92,10 +92,10 @@ class ViTario:
             img_size=IMG_SIZE,
             patch_size=(16, 16),
             num_moves=NUM_MOVES,
-            embed_dim=64,
+            embed_dim=128,
             num_attn_heads=4,
             attn_head_size=32,
-            hidden_size=128,
+            hidden_size=512,
             num_hidden_layers=1,
             num_attn_blocks=6,
             device=self.device).to(self.device)
@@ -204,9 +204,18 @@ class ViTario:
 
             # evaluate on test set
             _evaluate_model()
+
+            # save the model after every epoch (checkpoints)
+            self.logger.info(
+                f'Saving model after {epoch + 1} epochs of training...')
+            self.save(epoch_num=epoch + 1)
             
         self.model.eval()
-        self.logger.info('Finished pretraining model')
+        self.logger.info('Finished training model')
+
+        # save final model
+        self.logger.info('Saving trained model...')
+        self.save()
 
     @torch.no_grad()
     def predict_next_move(self, frames):
@@ -245,20 +254,26 @@ class ViTario:
         # return next move strings and probabilities
         return list(zip(next_move_strs, next_move_probs))
 
-    def save(self, save_dir=DEFAULT_SAVE_DIR):
+    def save(self, save_dir=DEFAULT_SAVE_DIR, epoch_num=None):
         # create save directory if it doesn't already exist
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir, exist_ok=True)
 
         # save model
-        model_save_path = os.path.join(save_dir, 'model_state_dict.pth')
+        file_name = 'model_state_dict'
+        if epoch_num is not None:
+            file_name += f'_epoch{epoch_num}'
+        model_save_path = os.path.join(save_dir, f'{file_name}.pth')
         torch.save(self.model.state_dict(), model_save_path)
         self.logger.info(
             f'Saved model parameters to {model_save_path}')
 
-    def load(self, load_dir=DEFAULT_SAVE_DIR):
+    def load(self, load_dir=DEFAULT_SAVE_DIR, epoch_num=None):
         # load model
-        model_save_path = os.path.join(load_dir, 'model_state_dict.pth')
+        file_name = 'model_state_dict'
+        if epoch_num is not None:
+            file_name += f'_epoch{epoch_num}'
+        model_save_path = os.path.join(load_dir, f'{file_name}.pth')
         self.model = self._get_model_instance()
         self.model.load_state_dict(torch.load(model_save_path))
         self.model.eval()
